@@ -1,15 +1,19 @@
 import moment from 'moment';
 import React from 'react';
-import { personas } from './shared/data/personas';
-import { tipoGastos } from './shared/data/tipoGasto';
-import { IGasto } from './shared/interfaces/gasto';
+import { saveGasto, loadGasto } from '../pages-lib/gastoService';
+import { personas } from '../shared/data/personas';
+import { tipoGastos } from '../shared/data/tipoGasto';
+import { IGasto } from '../shared/interfaces/gasto';
 
-interface NuevoGastoProps {}
+interface FormGastoProps {
+    gastoId?: string;
+}
 
-interface NuevoGastoState {
+interface FormGastoState {
     form: IGasto;
     tipoGastos: string[];
     personas: string[];
+    gastoOriginal: IGasto;
 }
 
 type HTMLFormElement =
@@ -17,11 +21,11 @@ type HTMLFormElement =
     | HTMLSelectElement
     | HTMLTextAreaElement;
 
-export default class NuevoGasto extends React.Component<
-    NuevoGastoProps,
-    NuevoGastoState
+export default class FormGasto extends React.Component<
+    FormGastoProps,
+    FormGastoState
 > {
-    constructor(props: NuevoGastoProps) {
+    constructor(props: FormGastoProps) {
         super(props);
         this.state = {
             form: {
@@ -35,10 +39,21 @@ export default class NuevoGasto extends React.Component<
             },
             tipoGastos: [],
             personas: [],
+            gastoOriginal: {} as IGasto,
         };
 
         this.onChangeFormField = this.onChangeFormField.bind(this);
         this.guardarGasto = this.guardarGasto.bind(this);
+    }
+
+    componentDidUpdate(prevProps: FormGastoProps) {
+        if (prevProps.gastoId !== this.props.gastoId) {
+            if (this.props.gastoId) {
+                this.cargarGasto(this.props.gastoId);
+            } else {
+                this.resetForm();
+            }
+        }
     }
 
     onChangeFormField({ currentTarget }: React.ChangeEvent<HTMLFormElement>) {
@@ -57,16 +72,7 @@ export default class NuevoGasto extends React.Component<
     }
 
     async guardarGasto() {
-        const fetchConfig = {
-            method: 'POST',
-            body: JSON.stringify(this.state.form),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        };
-
-        const { id, error } = await fetch('/api/gasto', fetchConfig).then((res) => res.json());
+        const { id, error } = await saveGasto(this.state.form);
 
         if (error) {
             console.error(error);
@@ -85,6 +91,41 @@ export default class NuevoGasto extends React.Component<
         });
     }
 
+    async cargarGasto(id: string) {
+        const { gasto }: { gasto: IGasto } = await loadGasto(id);
+
+        this.setState({
+            form: {
+                _id: gasto._id,
+                pagador: gasto.pagador,
+                tipo: gasto.tipo,
+                fecha: moment(gasto.fecha).format('yyyy-MM-DD'),
+                monto: gasto.monto,
+                detalle: gasto.detalle,
+                observaciones: gasto.observaciones,
+            },
+            gastoOriginal: gasto
+        });
+    }
+
+    resetForm(callback = () => {}) {
+        this.setState(
+            {
+                form: {
+                    _id: null,
+                    pagador: '',
+                    tipo: '',
+                    fecha: moment().format('yyyy-MM-DD'),
+                    monto: 0,
+                    detalle: '',
+                    observaciones: '',
+                },
+                gastoOriginal: {} as IGasto,
+            },
+            callback
+        );
+    }
+
     render() {
         return (
             <form>
@@ -95,12 +136,14 @@ export default class NuevoGasto extends React.Component<
                     value={this.state.form.pagador}
                     onChange={this.onChangeFormField}
                 >
-                    <option key="-1" value="">Seleccione Persona</option>
-                    {personas.map((persona, index) =>
+                    <option key="-1" value="">
+                        Seleccione Persona
+                    </option>
+                    {personas.map((persona, index) => (
                         <option key={index} value={persona}>
                             {persona}
                         </option>
-                    )}
+                    ))}
                 </select>
 
                 <label htmlFor="tipo">Tipo</label>
@@ -110,12 +153,14 @@ export default class NuevoGasto extends React.Component<
                     value={this.state.form.tipo}
                     onChange={this.onChangeFormField}
                 >
-                    <option key="-1" value="">Seleccione Tipo</option>
-                    {tipoGastos.map((tipo, index) =>
+                    <option key="-1" value="">
+                        Seleccione Tipo
+                    </option>
+                    {tipoGastos.map((tipo, index) => (
                         <option key={index} value={tipo}>
                             {tipo}
                         </option>
-                    )}
+                    ))}
                 </select>
 
                 <label htmlFor="fecha">Fecha</label>
@@ -123,7 +168,7 @@ export default class NuevoGasto extends React.Component<
                     type="date"
                     className="form-control"
                     id="fecha"
-                    value={this.state.form.fecha}
+                    value={this.state.form.fecha as string}
                     onChange={this.onChangeFormField}
                 />
 

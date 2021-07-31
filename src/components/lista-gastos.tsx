@@ -1,10 +1,20 @@
+import moment from 'moment';
 import React from 'react';
-import { IGasto } from './shared/interfaces/gasto';
+import { Dropdown, DropdownButton } from 'react-bootstrap';
+import { deleteGasto, listGastos } from '../pages-lib/gastoService';
+import { IGasto } from '../shared/interfaces/gasto';
 
-interface ListaGastosProps {}
+interface ListaGastosProps extends ListaGastosFilters {
+    selectGasto: (id: string) => void
+}
 
 interface ListaGastosState {
     gastos: IGasto[];
+}
+
+export interface ListaGastosFilters {
+    dateFrom: string,
+    dateTo: string
 }
 
 export default class ListaGastos extends React.Component<
@@ -13,22 +23,30 @@ export default class ListaGastos extends React.Component<
 > {
     constructor(props: ListaGastosProps) {
         super(props);
-
+ 
         this.state = {
             gastos: [],
         };
 
         this.loadGastos = this.loadGastos.bind(this);
+        this.eliminarGasto = this.eliminarGasto.bind(this);
+        this.editarGasto = this.editarGasto.bind(this);
     }
 
     componentDidMount() {
         this.loadGastos();
     }
 
+    componentDidUpdate({ dateFrom, dateTo }: ListaGastosProps) {
+        if (dateFrom !== this.props.dateFrom || dateTo !== this.props.dateTo) {
+            this.loadGastos();
+        }
+    }
+
     async loadGastos() {
-        const { gastos, error } = await fetch('/api/gasto').then((res) =>
-            res.json()
-        );
+        const { dateFrom, dateTo } = this.props;
+
+        const { gastos, error } = await listGastos({ dateFrom, dateTo });
 
         if (error) {
             console.error(error);
@@ -46,6 +64,25 @@ export default class ListaGastos extends React.Component<
         }
 
         this.setState({ gastos });
+    }
+
+    async eliminarGasto(e: React.MouseEvent<HTMLElement>) {
+        const id = e.currentTarget.getAttribute('data-id');
+
+        const { error } = await deleteGasto(id || '');
+
+        if (error) {
+            console.error(error);
+            alert('No se pudo eliminar el gasto. ' + error.message);
+            return;
+        }
+
+        this.loadGastos();
+    }
+
+    editarGasto(e: React.MouseEvent<HTMLElement>) {
+        const id = e.currentTarget.getAttribute('data-id');
+        id && this.props.selectGasto(id);
     }
 
     render() {
@@ -70,6 +107,7 @@ export default class ListaGastos extends React.Component<
                             <th>Monto</th>
                             <th>Detalle</th>
                             <th>Observaciones</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
 
@@ -79,10 +117,19 @@ export default class ListaGastos extends React.Component<
                                 <td>{gasto._id}</td>
                                 <td>{gasto.pagador}</td>
                                 <td>{gasto.tipo}</td>
-                                <td>{gasto.fecha}</td>
+                                <td>{moment(gasto.fecha).format('DD-MM-yyyy')}</td>
                                 <td>{gasto.monto}</td>
                                 <td>{gasto.detalle}</td>
                                 <td>{gasto.observaciones}</td>
+                                <td>
+                                    <DropdownButton
+                                        title="Acciones"
+                                        size="sm"
+                                    >
+                                        <Dropdown.Item data-id={gasto._id} onClick={this.editarGasto}>Editar</Dropdown.Item>
+                                        <Dropdown.Item data-id={gasto._id} onClick={this.eliminarGasto}>Eliminar</Dropdown.Item>
+                                    </DropdownButton>
+                                </td>
                             </tr>
                         )}
                     </tbody>
