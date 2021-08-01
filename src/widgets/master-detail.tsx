@@ -1,4 +1,4 @@
-import ListaGastos, { ListaGastosFilters } from '../components/lista-gastos';
+import ListaGastos from '../components/lista-gastos';
 import FormGasto from '../components/form-gasto';
 import React from 'react';
 import moment from 'moment';

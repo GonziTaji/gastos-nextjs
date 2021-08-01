@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IGasto } from '../../../shared/interfaces/gasto';
 import { MongoClient, ObjectId } from 'mongodb';
-import { ListaGastosFilters } from '../../../components/lista-gastos';
+import { ListaGastosFilters } from '../../../shared/interfaces/lista-gasto-filters';
 
 const MONGO_URL = process.env.MONGO_URL || '';
 

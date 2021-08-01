@@ -1,4 +1,4 @@
-import { ListaGastosFilters } from "../components/lista-gastos";
+import { ListaGastosFilters } from "../shared/interfaces/lista-gasto-filters";
 import { IGasto } from "../shared/interfaces/gasto";
 
 export function listGastos(filters: ListaGastosFilters = {} as any): Promise<{gastos: IGasto[], error?: any }> {
