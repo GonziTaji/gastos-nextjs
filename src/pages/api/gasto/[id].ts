@@ -71,6 +71,8 @@ async function editarGasto(id: string, body: IGasto): Promise<UpdateResult> {
         body.fecha = new Date(body.fecha);
     }
 
+    body.monto = parseInt(body.monto as any);
+
     const client = new MongoClient(MONGO_URL);
         
     await client.connect();

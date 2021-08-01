@@ -3,6 +3,7 @@ import React from 'react';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
 import { deleteGasto, listGastos } from '../pages-lib/gastoService';
 import { IGasto } from '../shared/interfaces/gasto';
+import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 
 interface ListaGastosProps extends ListaGastosFilters {
     selectGasto: (id: string) => void
@@ -10,11 +11,6 @@ interface ListaGastosProps extends ListaGastosFilters {
 
 interface ListaGastosState {
     gastos: IGasto[];
-}
-
-export interface ListaGastosFilters {
-    dateFrom: string,
-    dateTo: string
 }
 
 export default class ListaGastos extends React.Component<
@@ -100,10 +96,10 @@ export default class ListaGastos extends React.Component<
                 <table className="table">
                     <thead>
                         <tr>
-                            <th>Id</th>
+                            {/* <th>Id</th> */}
+                            <th>Fecha</th>
                             <th>Pagador</th>
                             <th>Tipo</th>
-                            <th>Fecha</th>
                             <th>Monto</th>
                             <th>Detalle</th>
                             <th>Observaciones</th>
@@ -114,10 +110,10 @@ export default class ListaGastos extends React.Component<
                     <tbody>
                         {this.state.gastos.map((gasto) =>
                             <tr key={gasto._id}>
-                                <td>{gasto._id}</td>
+                                {/* <td>{gasto._id}</td> */}
+                                <td>{moment(gasto.fecha).format('DD-MM-yyyy')}</td>
                                 <td>{gasto.pagador}</td>
                                 <td>{gasto.tipo}</td>
-                                <td>{moment(gasto.fecha).format('DD-MM-yyyy')}</td>
                                 <td>{gasto.monto}</td>
                                 <td>{gasto.detalle}</td>
                                 <td>{gasto.observaciones}</td>
