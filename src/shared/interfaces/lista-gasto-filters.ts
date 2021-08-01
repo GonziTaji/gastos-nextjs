@@ -1,4 +1,5 @@
 export interface ListaGastosFilters {
     dateFrom: string,
-    dateTo: string
+    dateTo: string,
+    tipo?: 'gasto' | 'abono'
 }

@@ -66,7 +66,7 @@ async function verGastos(filter: ListaGastosFilters = {} as any) {
             findQuery.fecha = {};
         }
 
-        findQuery.fecha.$gte = new Date(filter.dateFrom)
+        findQuery.fecha.$gte = new Date(filter.dateFrom);
     }
 
     if (filter.dateTo) {
@@ -74,6 +74,22 @@ async function verGastos(filter: ListaGastosFilters = {} as any) {
             findQuery.fecha = {};
         }
         findQuery.fecha.$lte = new Date(filter.dateTo);
+    }
+
+    if (filter.tipo) {
+        switch (filter.tipo) {
+            case 'abono':
+                findQuery.tipo = { $eq: 'Abono Deuda' };
+                break;
+
+            case 'gasto':
+                findQuery.tipo = { $not: { $eq: 'Abono Deuda' } };
+                break;
+
+            default:
+                console.warn('filtro para tipo de gasto no definido: ' + filter.tipo);
+                break;
+        }
     }
 
     const client = new MongoClient(MONGO_URL);

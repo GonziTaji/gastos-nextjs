@@ -12,6 +12,10 @@ export function listGastos(filters: ListaGastosFilters = {} as any): Promise<{ga
         queryString.push('dateTo=' + filters.dateTo);
     }
 
+    if (filters.tipo) {
+        queryString.push('tipo=' + filters.tipo);
+    }
+
     return fetch('/api/gasto?' + queryString.join('&')).then((res) =>
         res.json()
     );

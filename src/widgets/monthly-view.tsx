@@ -206,9 +206,19 @@ export default class MonthlyView extends React.Component<
                     </div>
                 </div>
 
+                <h3> Gastos </h3>
                 <ListaGastos
                     dateFrom={this.state.filters.dateFrom}
                     dateTo={this.state.filters.dateTo}
+                    tipo="gasto"
+                    selectGasto={() => {}}
+                ></ListaGastos>
+
+                <h3> Abonos </h3>
+                <ListaGastos
+                    dateFrom={this.state.filters.dateFrom}
+                    dateTo={this.state.filters.dateTo}
+                    tipo="abono"
                     selectGasto={() => {}}
                 ></ListaGastos>
             </>

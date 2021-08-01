@@ -40,9 +40,9 @@ export default class ListaGastos extends React.Component<
     }
 
     async loadGastos() {
-        const { dateFrom, dateTo } = this.props;
+        const { dateFrom, dateTo, tipo } = this.props;
 
-        const { gastos, error } = await listGastos({ dateFrom, dateTo });
+        const { gastos, error } = await listGastos({ dateFrom, dateTo, tipo });
 
         if (error) {
             console.error(error);
@@ -83,12 +83,7 @@ export default class ListaGastos extends React.Component<
 
     render() {
         return (
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateRows: 'auto 1fr',
-                }}
-            >
+            <div>
                 <button className="btn btn-primary" onClick={this.loadGastos}>
                     Actualizar
                 </button>
