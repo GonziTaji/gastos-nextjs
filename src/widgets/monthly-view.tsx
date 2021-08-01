@@ -30,10 +30,20 @@ export default class MonthlyView extends React.Component<
             filters: this.getToFromDates(currentMonth, currentYear),
         };
 
+        this.years = [currentYear];
+        for (let i = 1; i < 4; i++) {
+            this.years.push(currentYear - i);
+        }
+
         this.onChangeMonth = this.onChangeMonth.bind(this);
         this.goPreviousMonth = this.goPreviousMonth.bind(this);
         this.goNextMonth = this.goNextMonth.bind(this);
+        this.onChangeYear = this.onChangeYear.bind(this);
+        this.goPreviousYear = this.goPreviousYear.bind(this);
+        this.goNextYear = this.goNextYear.bind(this);
     }
+
+    readonly years: number[];
 
     onChangeMonth(e: React.ChangeEvent<HTMLSelectElement>) {
         const month = parseInt(e.currentTarget.value);
@@ -50,6 +60,21 @@ export default class MonthlyView extends React.Component<
         });
     }
 
+    onChangeYear(e: React.ChangeEvent<HTMLSelectElement>) {
+        const year = parseInt(e.currentTarget.value);
+
+        if (isNaN(year)) {
+            console.error('value of year select is not a number: ' + year);
+            return;
+        }
+
+        this.setState({
+            ...this.state,
+            filters: this.getToFromDates(this.state.month, year),
+            year: year,
+        });
+    }
+
     getToFromDates(month: number, year: number) {
         if (month === -1) {
             return { dateFrom: '', dateTo: '' };
@@ -63,26 +88,38 @@ export default class MonthlyView extends React.Component<
     }
 
     goPreviousMonth() {
-        let month = this.state.month - 1;
-        let year = this.state.year;
-        if (this.state.month < 0) {
-            month = 11;
-            year = year - 1;
-        }
-
-        this.setState({
-            month,
-            year,
-            filters: this.getToFromDates(month, year),
-        });
+        this.changeMonth(this.state.month - 1);
     }
 
     goNextMonth() {
-        let month = this.state.month + 1;
+        this.changeMonth(this.state.month + 1);
+    }
+
+    goPreviousYear() {
+        this.changeYear(this.state.year - 1);
+    }
+
+    goNextYear() {
+        this.changeYear(this.state.year + 1);
+    }
+
+    changeYear(year: number) {
+        if (this.years.indexOf(year) !== -1) {
+            this.setState({
+                year,
+                filters: this.getToFromDates(this.state.month, year),
+            });
+        }
+    }
+
+    changeMonth(month: number) {
         let year = this.state.year;
-        if (this.state.month > 11) {
-            month = 0;
-            year = year + 1;
+        if (month < 0) {
+            month = 11 - month;
+            year -= 1;
+        } else if (month > 11) {
+            month -= 11;
+            year += 1;
         }
 
         this.setState({
@@ -95,8 +132,6 @@ export default class MonthlyView extends React.Component<
     render() {
         return (
             <>
-                <p> {this.state.year} </p>
-
                 <div className="row">
                     <div className="col">
                         <Resumen
@@ -138,6 +173,36 @@ export default class MonthlyView extends React.Component<
                                 <i className="bi bi-caret-right-fill"></i>
                             </button>
                         </div>
+
+                        {this.state.month !== -1 && <div className="input-group">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={this.goPreviousYear}
+                            >
+                                <i className="bi bi-caret-left-fill"></i>
+                            </button>
+
+                            <select
+                                className="form-select"
+                                value={this.state.year}
+                                onChange={this.onChangeYear}
+                            >
+                                {this.years.map((year, index) => (
+                                    <option key={index} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={this.goNextYear}
+                            >
+                                <i className="bi bi-caret-right-fill"></i>
+                            </button>
+                        </div>}
                     </div>
                 </div>
 
