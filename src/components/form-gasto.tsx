@@ -1,12 +1,15 @@
 import moment from 'moment';
 import React from 'react';
+import { Modal } from 'react-bootstrap';
 import { saveGasto, loadGasto } from '../pages-lib/gastoService';
 import { personas } from '../shared/data/personas';
 import { tipoGastos } from '../shared/data/tipoGasto';
 import { IGasto } from '../shared/interfaces/gasto';
 
 interface FormGastoProps {
-    gastoId?: string;
+    gastoId: string;
+    showModal: boolean,
+    hideModal: () => void, 
 }
 
 interface FormGastoState {
@@ -44,6 +47,7 @@ export default class FormGasto extends React.Component<
 
         this.onChangeFormField = this.onChangeFormField.bind(this);
         this.guardarGasto = this.guardarGasto.bind(this);
+        this.guardarGastoYCerrar = this.guardarGastoYCerrar.bind(this);
     }
 
     componentDidUpdate(prevProps: FormGastoProps) {
@@ -71,8 +75,8 @@ export default class FormGasto extends React.Component<
         });
     }
 
-    async guardarGasto() {
-        const { id, error } = await saveGasto(this.state.form);
+    async guardarGasto(_e: React.MouseEvent, callback: () => void = () => {}) {
+        const { id: _id, error } = await saveGasto(this.state.form);
 
         if (error) {
             console.error(error);
@@ -88,7 +92,11 @@ export default class FormGasto extends React.Component<
                 detalle: '',
                 observaciones: '',
             },
-        });
+        }, callback);
+    }
+
+    guardarGastoYCerrar(e: React.MouseEvent) {
+        this.guardarGasto(e, this.props.hideModal);
     }
 
     async cargarGasto(id: string) {
@@ -128,85 +136,105 @@ export default class FormGasto extends React.Component<
 
     render() {
         return (
-            <form>
-                <label htmlFor="pagador">Pagador</label>
-                <select
-                    className="form-select"
-                    id="pagador"
-                    value={this.state.form.pagador}
-                    onChange={this.onChangeFormField}
-                >
-                    <option key="-1" value="">
-                        Seleccione Persona
-                    </option>
-                    {personas.map((persona, index) => (
-                        <option key={index} value={persona}>
-                            {persona}
-                        </option>
-                    ))}
-                </select>
+            <Modal show={this.props.showModal} onHide={this.props.hideModal}>
+                <Modal.Header>
+                    {(this.props.gastoId &&
+                        'Editando gasto' ||
+                        'Ingresando nuevo gasto')}
+                </Modal.Header>
 
-                <label htmlFor="tipo">Tipo</label>
-                <select
-                    className="form-select"
-                    id="tipo"
-                    value={this.state.form.tipo}
-                    onChange={this.onChangeFormField}
-                >
-                    <option key="-1" value="">
-                        Seleccione Tipo
-                    </option>
-                    {tipoGastos.map((tipo, index) => (
-                        <option key={index} value={tipo}>
-                            {tipo}
-                        </option>
-                    ))}
-                </select>
+                <Modal.Body>
+                    <form>
+                        <label htmlFor="pagador">Pagador</label>
+                        <select
+                            className="form-select"
+                            id="pagador"
+                            value={this.state.form.pagador}
+                            onChange={this.onChangeFormField}
+                        >
+                            <option key="-1" value="">
+                                Seleccione Persona
+                            </option>
+                            {personas.map((persona, index) => (
+                                <option key={index} value={persona}>
+                                    {persona}
+                                </option>
+                            ))}
+                        </select>
 
-                <label htmlFor="fecha">Fecha</label>
-                <input
-                    type="date"
-                    className="form-control"
-                    id="fecha"
-                    value={this.state.form.fecha as string}
-                    onChange={this.onChangeFormField}
-                />
+                        <label htmlFor="tipo">Tipo</label>
+                        <select
+                            className="form-select"
+                            id="tipo"
+                            value={this.state.form.tipo}
+                            onChange={this.onChangeFormField}
+                        >
+                            <option key="-1" value="">
+                                Seleccione Tipo
+                            </option>
+                            {tipoGastos.map((tipo, index) => (
+                                <option key={index} value={tipo}>
+                                    {tipo}
+                                </option>
+                            ))}
+                        </select>
 
-                <label htmlFor="monto">Monto</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    id="monto"
-                    value={this.state.form.monto}
-                    onChange={this.onChangeFormField}
-                />
+                        <label htmlFor="fecha">Fecha</label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            id="fecha"
+                            value={this.state.form.fecha as string}
+                            onChange={this.onChangeFormField}
+                        />
 
-                <label htmlFor="detalle">Detalle</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    id="detalle"
-                    value={this.state.form.detalle}
-                    onChange={this.onChangeFormField}
-                />
+                        <label htmlFor="monto">Monto</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            id="monto"
+                            value={this.state.form.monto}
+                            onChange={this.onChangeFormField}
+                        />
 
-                <label htmlFor="observaciones">Observaciones</label>
-                <textarea
-                    className="form-control"
-                    id="observaciones"
-                    placeholder="Detalles adicionales"
-                    value={this.state.form.observaciones}
-                    onChange={this.onChangeFormField}
-                ></textarea>
+                        <label htmlFor="detalle">Detalle</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            id="detalle"
+                            value={this.state.form.detalle}
+                            onChange={this.onChangeFormField}
+                        />
 
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={this.guardarGasto}
-                >
-                    Guardar
-                </button>
-            </form>
+                        <label htmlFor="observaciones">Observaciones</label>
+                        <textarea
+                            className="form-control"
+                            id="observaciones"
+                            placeholder="Detalles adicionales"
+                            value={this.state.form.observaciones}
+                            onChange={this.onChangeFormField}
+                        ></textarea>
+                    </form>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <button type="button" className="btn btn-danger" onClick={this.props.hideModal}>
+                        Cerrar
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn btn-success"
+                        onClick={this.guardarGastoYCerrar}
+                    >
+                        Guardar
+                    </button>
+
+                    <button type="button" className="btn btn-primary" onClick={this.guardarGasto}>
+                        Guardar y crear otro
+                    </button>
+                </Modal.Footer>
+            </Modal>
         );
     }
 }

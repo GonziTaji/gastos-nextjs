@@ -1,5 +1,6 @@
 import moment from 'moment';
 import React from 'react';
+import FormGasto from '../components/form-gasto';
 import ListaGastos from '../components/lista-gastos';
 import Resumen from '../components/resumen';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
@@ -10,6 +11,8 @@ interface MonthlyViewState {
     filters: ListaGastosFilters;
     month: number;
     year: number;
+    showGastoModal: boolean;
+    selectedGastoId: string; 
 }
 
 const dateFormat = 'yyyy-MM-DD';
@@ -28,6 +31,8 @@ export default class MonthlyView extends React.Component<
             month: currentMonth,
             year: currentYear,
             filters: this.getToFromDates(currentMonth, currentYear),
+            showGastoModal: false,
+            selectedGastoId: ''
         };
 
         this.years = [currentYear];
@@ -41,6 +46,9 @@ export default class MonthlyView extends React.Component<
         this.onChangeYear = this.onChangeYear.bind(this);
         this.goPreviousYear = this.goPreviousYear.bind(this);
         this.goNextYear = this.goNextYear.bind(this);
+        this.hideModal = this.hideModal.bind(this);
+        this.showModal = this.showModal.bind(this);
+        this.nuevoGasto = this.nuevoGasto.bind(this);
     }
 
     readonly years: number[];
@@ -129,9 +137,31 @@ export default class MonthlyView extends React.Component<
         });
     }
 
+    hideModal() {
+        this.setState({
+            showGastoModal: false,
+            selectedGastoId: '',
+        });
+    }
+
+    showModal(gastoId: string = '') {
+        this.setState({
+            showGastoModal: true,
+            selectedGastoId: gastoId,
+        });
+    }
+
+    nuevoGasto() {
+        this.showModal()
+    }
+
     render() {
         return (
             <>
+                <button type="button" className="btn btn-success" onClick={this.nuevoGasto}>
+                    Crear nuevo gasto o abono
+                </button>
+
                 <div className="row">
                     <div className="col">
                         <Resumen
@@ -174,53 +204,67 @@ export default class MonthlyView extends React.Component<
                             </button>
                         </div>
 
-                        {this.state.month !== -1 && <div className="input-group">
-                            <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={this.goPreviousYear}
-                            >
-                                <i className="bi bi-caret-left-fill"></i>
-                            </button>
+                        {this.state.month !== -1 && (
+                            <div className="input-group">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={this.goPreviousYear}
+                                >
+                                    <i className="bi bi-caret-left-fill"></i>
+                                </button>
 
-                            <select
-                                className="form-select"
-                                value={this.state.year}
-                                onChange={this.onChangeYear}
-                            >
-                                {this.years.map((year, index) => (
-                                    <option key={index} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
+                                <select
+                                    className="form-select"
+                                    value={this.state.year}
+                                    onChange={this.onChangeYear}
+                                >
+                                    {this.years.map((year, index) => (
+                                        <option key={index} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
 
-                            <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={this.goNextYear}
-                            >
-                                <i className="bi bi-caret-right-fill"></i>
-                            </button>
-                        </div>}
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={this.goNextYear}
+                                >
+                                    <i className="bi bi-caret-right-fill"></i>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <h3> Gastos </h3>
-                <ListaGastos
-                    dateFrom={this.state.filters.dateFrom}
-                    dateTo={this.state.filters.dateTo}
-                    tipo="gasto"
-                    selectGasto={() => {}}
-                ></ListaGastos>
+                <div className="row">
+                    <div className="col">
+                        <h3> Gastos </h3>
+                        <ListaGastos
+                            dateFrom={this.state.filters.dateFrom}
+                            dateTo={this.state.filters.dateTo}
+                            tipo="gasto"
+                            selectGasto={this.showModal}
+                        ></ListaGastos>
+                    </div>
 
-                <h3> Abonos </h3>
-                <ListaGastos
-                    dateFrom={this.state.filters.dateFrom}
-                    dateTo={this.state.filters.dateTo}
-                    tipo="abono"
-                    selectGasto={() => {}}
-                ></ListaGastos>
+                    <div className="col">
+                        <h3> Abonos </h3>
+                        <ListaGastos
+                            dateFrom={this.state.filters.dateFrom}
+                            dateTo={this.state.filters.dateTo}
+                            tipo="abono"
+                            selectGasto={this.showModal}
+                        ></ListaGastos>
+                    </div>
+                </div>
+
+                <FormGasto
+                    gastoId={this.state.selectedGastoId}
+                    showModal={this.state.showGastoModal}
+                    hideModal={this.hideModal}
+                ></FormGasto>
             </>
         );
     }
