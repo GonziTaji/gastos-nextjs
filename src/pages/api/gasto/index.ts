@@ -2,8 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { IGasto } from '../../../shared/interfaces/gasto';
 import { MongoClient, ObjectId } from 'mongodb';
 import { ListaGastosFilters } from '../../../shared/interfaces/lista-gasto-filters';
-
-const MONGO_URL = process.env.MONGO_URL || '';
+import { MONGO_URL } from '../../../api-lib/mongo';
 
 export default async function gasto(req: NextApiRequest, res: NextApiResponse<any>) {
     let status = 200,

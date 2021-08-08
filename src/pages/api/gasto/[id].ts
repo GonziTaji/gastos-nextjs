@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { MongoClient, ObjectId, UpdateResult } from 'mongodb';
 import { IGasto } from '../../../shared/interfaces/gasto';
-
-const MONGO_URL = process.env.MONGO_URL || '';
+import { MONGO_URL } from '../../../api-lib/mongo';
 
 export default async function gastoid(req: NextApiRequest, res: NextApiResponse<any>) {
     let status = 200,

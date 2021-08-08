@@ -1,8 +1,7 @@
 import { MongoClient } from "mongodb";
 import { NextApiRequest, NextApiResponse } from "next";
+import { MONGO_URL } from "../../api-lib/mongo";
 import { ListaGastosFilters } from "../../shared/interfaces/lista-gasto-filters";
-
-const MONGO_URL = process.env.MONGO_URL || '';
 
 export default async function resumen(req: NextApiRequest, res: NextApiResponse<any>) {
     let status = 200,
