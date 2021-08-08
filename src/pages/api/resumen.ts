@@ -53,7 +53,71 @@ async function verResumen(filter: ListaGastosFilters = {} as any) {
 
     const response = await client.db('gastos').collection('gastos').aggregate([
         { $match: matchQuery},
-        { $group: { _id: "$pagador", total: { $sum: "$monto" } } }
+        {
+            $set: {
+                tipo: {
+                    $cond: {
+                        if: {
+                            $regexMatch: {
+                                input: '$tipo',
+                                regex: /abono/i,
+                            },
+                        },
+                        then: 'abono',
+                        else: 'gasto',
+                    },
+                },
+            },
+        },
+        {
+            $group: {
+                _id: { pagador: '$pagador', tipo: '$tipo' },
+                total: { $sum: '$monto' },
+            },
+        },
+        {
+            $group: {
+                _id: '$_id.pagador',
+                items: { $push: { total: '$total', tipo: '$_id.tipo' } },
+            },
+        },
+        {
+            $set: {
+                reduceResult: {
+                    $reduce: {
+                        input: '$items',
+                        initialValue: { abono: 0, gasto: 0 },
+                        in: {
+                            abono: {
+                                $cond: {
+                                    if: { $eq: ['$$this.tipo', 'abono'] },
+                                    then: {
+                                        $add: ['$$value.abono', '$$this.total'],
+                                    },
+                                    else: '$$value.abono',
+                                },
+                            },
+                            gasto: {
+                                $cond: {
+                                    if: { $eq: ['$$this.tipo', 'gasto'] },
+                                    then: {
+                                        $add: ['$$value.gasto', '$$this.total'],
+                                    },
+                                    else: '$$value.gasto',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            $project: {
+                abono: '$reduceResult.abono',
+                gasto: '$reduceResult.gasto',
+                pagador: '$_id',
+            },
+        },
     ]).toArray();
 
     client.close();

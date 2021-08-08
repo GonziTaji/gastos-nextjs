@@ -158,85 +158,86 @@ export default class MonthlyView extends React.Component<
     render() {
         return (
             <>
-                <button type="button" className="btn btn-success" onClick={this.nuevoGasto}>
-                    Crear nuevo gasto o abono
-                </button>
+                <h1 className="d-flex justify-content-between align-items-end">
+                    <span>Vista mensual</span>
+                    <button type="button" className="btn btn-success" onClick={this.nuevoGasto}>
+                        Crear nuevo gasto o abono
+                    </button>
+                </h1>
 
-                <div className="row">
-                    <div className="col">
-                        <Resumen
-                            dateFrom={this.state.filters.dateFrom}
-                            dateTo={this.state.filters.dateTo}
-                        ></Resumen>
-                    </div>
+                <div className="input-group">
+                    <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={this.goPreviousMonth}
+                    >
+                        <i className="bi bi-caret-left-fill"></i>
+                    </button>
 
-                    <div className="col">
-                        <div className="input-group">
-                            <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={this.goPreviousMonth}
-                            >
-                                <i className="bi bi-caret-left-fill"></i>
-                            </button>
+                    <select
+                        className="form-select"
+                        value={this.state.month}
+                        onChange={this.onChangeMonth}
+                    >
+                        <option key={-1} value={-1}>
+                            Todos
+                        </option>
+                        {moment.months().map((month, index) => (
+                            <option key={index} value={index}>
+                                {month}
+                            </option>
+                        ))}
+                    </select>
 
-                            <select
-                                className="form-select"
-                                value={this.state.month}
-                                onChange={this.onChangeMonth}
-                            >
-                                <option key={-1} value={-1}>
-                                    Todos
-                                </option>
-                                {moment.months().map((month, index) => (
-                                    <option key={index} value={index}>
-                                        {month}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={this.goNextMonth}
-                            >
-                                <i className="bi bi-caret-right-fill"></i>
-                            </button>
-                        </div>
-
-                        {this.state.month !== -1 && (
-                            <div className="input-group">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={this.goPreviousYear}
-                                >
-                                    <i className="bi bi-caret-left-fill"></i>
-                                </button>
-
-                                <select
-                                    className="form-select"
-                                    value={this.state.year}
-                                    onChange={this.onChangeYear}
-                                >
-                                    {this.years.map((year, index) => (
-                                        <option key={index} value={year}>
-                                            {year}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={this.goNextYear}
-                                >
-                                    <i className="bi bi-caret-right-fill"></i>
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={this.goNextMonth}
+                    >
+                        <i className="bi bi-caret-right-fill"></i>
+                    </button>
                 </div>
+
+                {this.state.month !== -1 && (
+                    <div className="input-group">
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={this.goPreviousYear}
+                        >
+                            <i className="bi bi-caret-left-fill"></i>
+                        </button>
+
+                        <select
+                            className="form-select"
+                            value={this.state.year}
+                            onChange={this.onChangeYear}
+                        >
+                            {this.years.map((year, index) => (
+                                <option key={index} value={year}>
+                                    {year}
+                                </option>
+                            ))}
+                        </select>
+
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={this.goNextYear}
+                        >
+                            <i className="bi bi-caret-right-fill"></i>
+                        </button>
+                    </div>
+                )}
+
+                <br />
+
+                <Resumen
+                    dateFrom={this.state.filters.dateFrom}
+                    dateTo={this.state.filters.dateTo}
+                ></Resumen>
+
+                <br />
 
                 <div className="row">
                     <div className="col">

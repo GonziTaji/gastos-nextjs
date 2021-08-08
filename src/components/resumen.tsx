@@ -3,6 +3,7 @@ import React from 'react';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
 import { deleteGasto } from '../pages-lib/gastoService';
 import { listResumen } from '../pages-lib/resumenService';
+import { currency } from '../pages-lib/utils';
 import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 import { IResumen } from '../shared/interfaces/resumen';
@@ -61,16 +62,56 @@ export default class Resumen extends React.Component<
     }
 
     render() {
+        const totalGastos = this.state.resumen.reduce((acc, curr) => acc += curr.gasto, 0);
+
         return (
             <>
-                <div className="card" style={{ maxWidth: '300px' }}>
+                <div className="card">
+                    <div className="card-header">
+                        Resumen
+                    </div>
+
                     <div className="card-body">
-                        {this.state.resumen.map((item) => (
-                            <div className="row" key={item._id}>
-                                <div className="col">{item._id}</div>
-                                <div className="col col-auto">{item.total}</div>
-                            </div>
-                        ))}
+                        <table className="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th> Pagador </th>
+                                    <th> Gasto </th>
+                                    <th> Deuda </th>
+                                    <th> Abono </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {this.state.resumen.map(({ _id, gasto, abono, pagador }) => {
+                                    const deuda = (totalGastos / 2) - gasto;
+
+                                    return (
+                                        <tr key={_id}>
+                                            <td>{pagador}</td>
+                                            <td>{currency(gasto)}</td>
+                                            <td>{currency(deuda)}</td>
+                                            <td>{currency(abono)}</td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+
+                        <table className="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>Total por persona</th>
+                                </tr>
+                            </thead>
+
+                            <thead>
+                                <tr>
+                                    <td>{currency(totalGastos)}</td>
+                                    <td>{currency(totalGastos/2)}</td>
+                                </tr>
+                            </thead>
+                        </table>
                     </div>
                 </div>
             </>

@@ -13,9 +13,9 @@ export default class Home extends React.Component<HomeProps, HomeStatus> {
 
     render() {
         return (
-            <>
+            <div className="container">
                 <MonthlyView></MonthlyView>
-            </>
+            </div>
         );
     }
 }
