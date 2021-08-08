@@ -4,7 +4,7 @@ import { IGasto } from '../../../shared/interfaces/gasto';
 
 const MONGO_URL = process.env.MONGO_URL || '';
 
-export default async function(req: NextApiRequest, res: NextApiResponse<any>) {
+export default async function gastoid(req: NextApiRequest, res: NextApiResponse<any>) {
     let status = 200,
         json = {};
 

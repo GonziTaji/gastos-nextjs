@@ -5,7 +5,7 @@ import { ListaGastosFilters } from '../../../shared/interfaces/lista-gasto-filte
 
 const MONGO_URL = process.env.MONGO_URL || '';
 
-export default async function (req: NextApiRequest, res: NextApiResponse<any>) {
+export default async function gasto(req: NextApiRequest, res: NextApiResponse<any>) {
     let status = 200,
         json = {};
 
