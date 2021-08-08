@@ -141,6 +141,10 @@ export default class FormGasto extends React.Component<
                     {(this.props.gastoId &&
                         'Editando gasto' ||
                         'Ingresando nuevo gasto')}
+
+                    <button type="button" className="btn btn-close"
+                        onClick={this.props.hideModal}
+                    ></button>
                 </Modal.Header>
 
                 <Modal.Body>
