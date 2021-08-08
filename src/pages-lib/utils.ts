@@ -1,3 +1,5 @@
+import moment from "moment";
+
 export function currency(input: number) {
     var formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -8,6 +10,13 @@ export function currency(input: number) {
         maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
     });
 
-    return formatter.format(input);
+    return formatter.format(input).replace(',', '.');
+}
+
+/**
+ * @param format momentjs compatible format. Defaults to DD/MM/YY
+ */
+export function date(input: string | Date, format: string = 'DD/MM/YY') {
+    return moment(input).format(format);
 }
   

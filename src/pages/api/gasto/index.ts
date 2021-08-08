@@ -43,6 +43,7 @@ async function nuevoGasto(body: IGasto): Promise<ObjectId> {
     }
 
     body.monto = parseInt(body.monto as any);
+    body.created = new Date();
 
     const client = new MongoClient(MONGO_URL);
 

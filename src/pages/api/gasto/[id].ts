@@ -51,7 +51,7 @@ export default async function gastoid(req: NextApiRequest, res: NextApiResponse<
             }
             default:
                 status = 404;
-                json = { message: 'not found' }
+                json = { message: 'route not found' }
                 break;
             }
     } catch (e) {
@@ -71,6 +71,8 @@ async function editarGasto(id: string, body: IGasto): Promise<UpdateResult> {
     }
 
     body.monto = parseInt(body.monto as any);
+
+    body.updated = new Date();
 
     const client = new MongoClient(MONGO_URL);
         
@@ -113,6 +115,9 @@ async function verGasto(id: string) {
     if (!gastoDocument) {
         return null;
     }
+
+    gastoDocument.created = new Date();
+    gastoDocument.updated = new Date();
 
     const deleteResult = await client.db('gastos').collection('gastos').findOneAndDelete({ _id: new ObjectId(id) });
     const insertResult = await client.db('gastos').collection('gastos_eliminados').insertOne(gastoDocument);
