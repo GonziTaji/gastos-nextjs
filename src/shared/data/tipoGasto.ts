@@ -5,4 +5,5 @@ export const tipoGastos = [
     'Farmacia',
     'Otro',
     'Abono Deuda',
+    'GG.CC.'
 ];
