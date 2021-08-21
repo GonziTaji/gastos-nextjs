@@ -239,16 +239,12 @@ export default class MonthlyView extends React.Component<
                     )}
                 </div>
 
-                <br />
-
-                <div style={this.styles.autoWidth}>
+                <div className="py-2" style={this.styles.autoWidth}>
                     <Resumen
                         dateFrom={this.state.filters.dateFrom}
                         dateTo={this.state.filters.dateTo}
                     ></Resumen>
                 </div>
-
-                <br />
 
                 <div className="row">
                     <div className="col">

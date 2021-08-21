@@ -1,8 +1,7 @@
-import moment from 'moment';
 import React from 'react';
-import { Dropdown, DropdownButton } from 'react-bootstrap';
+import { Dropdown } from 'react-bootstrap';
 import { deleteGasto, listGastos } from '../pages-lib/gastoService';
-import { date } from '../pages-lib/utils';
+import { currency, date } from '../pages-lib/utils';
 import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 
@@ -110,7 +109,7 @@ export default class ListaGastos extends React.Component<
                                     <td>{date(gasto.fecha)}</td>
                                     <td>{gasto.pagador}</td>
                                     <td>{gasto.tipo}</td>
-                                    <td>{gasto.monto}</td>
+                                    <td>{currency(gasto.monto)}</td>
                                     <td>{gasto.detalle}</td>
                                     <td className="d-none d-md-table-cell">{gasto.observaciones}</td>
                                     <td>
