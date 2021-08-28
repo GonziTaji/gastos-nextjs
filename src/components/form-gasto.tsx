@@ -61,10 +61,11 @@ export default class FormGasto extends React.Component<
     }
 
     onChangeFormField({ currentTarget }: React.ChangeEvent<HTMLFormElement>) {
-        if (!this.state.form.hasOwnProperty(currentTarget.id)) {
+        if (!this.state.form[currentTarget.id]) {
             console.error(
                 `form field ${currentTarget.id} not registered in form`
             );
+            return;
         }
 
         this.setState({
@@ -76,7 +77,7 @@ export default class FormGasto extends React.Component<
     }
 
     async guardarGasto(_e: React.MouseEvent, callback: () => void = () => {}) {
-        const { id: _id, error } = await saveGasto(this.state.form);
+        const { error } = await saveGasto(this.state.form);
 
         if (error) {
             console.error(error);

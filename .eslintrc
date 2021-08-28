@@ -1,3 +1,18 @@
 {
-  "extends": "next"
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    },
+    "extends": [
+        "next",
+        "plugin:react/recommended"
+    ],
+    "plugins": [
+        "react"
+    ],
+    "env": {
+        "browser": true,
+        "es2021": true
+    }
 }
