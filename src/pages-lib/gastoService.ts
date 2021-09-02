@@ -1,7 +1,7 @@
 import { ListaGastosFilters } from "../shared/interfaces/lista-gasto-filters";
 import { IGasto } from "../shared/interfaces/gasto";
 
-export function listGastos(filters: ListaGastosFilters = {} as any): Promise<{gastos: IGasto[], error?: any }> {
+export function listGastos(filters: ListaGastosFilters = {} as any, grouped = false): Promise<{gastos: IGasto[], error?: any }> {
     const queryString = [];
 
     if(filters.dateFrom) {
@@ -14,6 +14,10 @@ export function listGastos(filters: ListaGastosFilters = {} as any): Promise<{ga
 
     if (filters.tipo) {
         queryString.push('tipo=' + filters.tipo);
+    }
+
+    if (grouped) {
+        queryString.push('group=1');
     }
 
     return fetch('/api/gasto?' + queryString.join('&')).then((res) =>

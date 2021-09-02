@@ -1,6 +1,8 @@
 import moment from 'moment';
 import React from 'react';
 import FormGasto from '../components/form-gasto';
+import GraficoGastos from '../components/grafico-gastos';
+import GraficoGastosMensuales from '../components/grafico-gastosMensuales';
 import ListaGastos from '../components/lista-gastos';
 import Resumen from '../components/resumen';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
@@ -24,13 +26,13 @@ export default class MonthlyView extends React.Component<
     constructor(props: MonthlyViewProps) {
         super(props);
 
-        const currentMonth = moment().month();
+        const lastMonth = moment().month();
         const currentYear = moment().year();
 
         this.state = {
-            month: currentMonth,
+            month: lastMonth,
             year: currentYear,
-            filters: this.getToFromDates(currentMonth, currentYear),
+            filters: this.getToFromDates(lastMonth, currentYear),
             showGastoModal: false,
             selectedGastoId: ''
         };
@@ -163,6 +165,10 @@ export default class MonthlyView extends React.Component<
     }
 
     render() {
+        const { dateTo, dateFrom } = this.state.filters;
+
+        const mes = moment(dateFrom).month() + 1;
+
         return (
             <>
                 <h1 className="d-flex justify-content-between align-items-end">
@@ -239,19 +245,34 @@ export default class MonthlyView extends React.Component<
                     )}
                 </div>
 
-                <div className="py-2" style={this.styles.autoWidth}>
+                <div className="py-2">
                     <Resumen
-                        dateFrom={this.state.filters.dateFrom}
-                        dateTo={this.state.filters.dateTo}
+                        dateFrom={dateFrom}
+                        dateTo={dateTo}
                     ></Resumen>
+
+                    <div className="row">
+                        <div className="col-12 col-sm-6">
+                            <GraficoGastos
+                                dateTo={dateTo}
+                                dateFrom={dateFrom}
+                            ></GraficoGastos>
+                        </div>
+
+                        <div className="col-12 col-sm-6">
+                            <GraficoGastosMensuales
+                                mes={mes}
+                            ></GraficoGastosMensuales>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="row">
                     <div className="col">
                         <h3> Gastos </h3>
                         <ListaGastos
-                            dateFrom={this.state.filters.dateFrom}
-                            dateTo={this.state.filters.dateTo}
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
                             tipo="gasto"
                             selectGasto={this.showModal}
                         ></ListaGastos>
@@ -260,8 +281,8 @@ export default class MonthlyView extends React.Component<
                     <div className="col">
                         <h3> Abonos </h3>
                         <ListaGastos
-                            dateFrom={this.state.filters.dateFrom}
-                            dateTo={this.state.filters.dateTo}
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
                             tipo="abono"
                             selectGasto={this.showModal}
                         ></ListaGastos>

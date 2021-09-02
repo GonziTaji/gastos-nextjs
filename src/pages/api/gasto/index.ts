@@ -18,7 +18,8 @@ export default async function gasto(req: NextApiRequest, res: NextApiResponse<an
             }
 
             case 'GET': {
-                const gastos = await verGastos(req.query as any);
+                const delegate = req.query.group ? verGastosAgrupados : verGastos;
+                const gastos = await delegate(req.query as any);
                 json = { gastos };
                 break;
             }
@@ -101,6 +102,57 @@ async function verGastos(filter: ListaGastosFilters = {} as any) {
         .collection('gastos')
         .find(findQuery)
         .toArray();
+
+    client.close();
+
+    return response;
+}
+
+async function verGastosAgrupados(filter: ListaGastosFilters = {} as any) {
+    const matchQuery = {} as any;
+
+    if (filter.dateFrom) {
+        if (!matchQuery.fecha) {
+            matchQuery.fecha = {};
+        }
+
+        matchQuery.fecha.$gte = new Date(filter.dateFrom)
+    }
+
+    if (filter.dateTo) {
+        if (!matchQuery.fecha) {
+            matchQuery.fecha = {};
+        }
+        matchQuery.fecha.$lte = new Date(filter.dateTo);
+    }
+
+    matchQuery.tipo = { $not: /abono/i };
+
+    const client = new MongoClient(MONGO_URL);
+
+    await client.connect();
+
+    const response = await client.db('gastos').collection('gastos').aggregate([
+        {
+            $match: matchQuery
+        },
+        {
+            $group: {
+                _id: '$tipo',
+                monto: { $sum: '$monto'}
+            }
+        },
+        {
+            $addFields: {
+                tipo: '$_id',
+            }
+        },
+        {
+            $sort: {
+                monto: -1
+            }
+        }
+    ]).toArray();
 
     client.close();
 

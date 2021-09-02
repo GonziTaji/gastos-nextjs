@@ -3,7 +3,7 @@ import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { saveGasto, loadGasto } from '../pages-lib/gastoService';
 import { personas } from '../shared/data/personas';
-import { tipoGastos } from '../shared/data/tipoGasto';
+import { TipoGasto, tipoGastos } from '../shared/data/tipoGasto';
 import { IGasto } from '../shared/interfaces/gasto';
 
 interface FormGastoProps {
@@ -14,9 +14,10 @@ interface FormGastoProps {
 
 interface FormGastoState {
     form: IGasto;
-    tipoGastos: string[];
+    tipoGastos: TipoGasto[];
     personas: string[];
     gastoOriginal: IGasto;
+    alertMsg: string;
 }
 
 type HTMLFormElement =
@@ -43,6 +44,7 @@ export default class FormGasto extends React.Component<
             tipoGastos: [],
             personas: [],
             gastoOriginal: {} as IGasto,
+            alertMsg: '',
         };
 
         this.onChangeFormField = this.onChangeFormField.bind(this);
@@ -61,7 +63,7 @@ export default class FormGasto extends React.Component<
     }
 
     onChangeFormField({ currentTarget }: React.ChangeEvent<HTMLFormElement>) {
-        if (!this.state.form[currentTarget.id]) {
+        if (this.state.form[currentTarget.id] === undefined) {
             console.error(
                 `form field ${currentTarget.id} not registered in form`
             );
@@ -88,7 +90,6 @@ export default class FormGasto extends React.Component<
         this.setState({
             form: {
                 ...this.state.form,
-                fecha: moment().format('yyyy-MM-DD'),
                 monto: 0,
                 detalle: '',
                 observaciones: '',
@@ -101,20 +102,32 @@ export default class FormGasto extends React.Component<
     }
 
     async cargarGasto(id: string) {
-        const { gasto }: { gasto: IGasto } = await loadGasto(id);
+        try {
+            const { gasto }: { gasto: IGasto } = await loadGasto(id);
 
-        this.setState({
-            form: {
-                _id: gasto._id,
-                pagador: gasto.pagador,
-                tipo: gasto.tipo,
-                fecha: moment(gasto.fecha).format('yyyy-MM-DD'),
-                monto: gasto.monto,
-                detalle: gasto.detalle,
-                observaciones: gasto.observaciones,
-            },
-            gastoOriginal: gasto
-        });
+            let alertMsg = '';
+
+            if (!this.state.tipoGastos.find(tipo => tipo.label === gasto.tipo)) {
+                alertMsg = `Tipo de gasto '${gasto.tipo}' no encontrado. Seleccione tipo correspondiente.`;
+                gasto.tipo = '';
+            }
+
+            this.setState({
+                form: {
+                    _id: gasto._id,
+                    pagador: gasto.pagador,
+                    tipo: gasto.tipo,
+                    fecha: moment(gasto.fecha).format('yyyy-MM-DD'),
+                    monto: gasto.monto,
+                    detalle: gasto.detalle,
+                    observaciones: gasto.observaciones,
+                },
+                gastoOriginal: gasto,
+                alertMsg,
+            });
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     resetForm(callback = () => {}) {
@@ -178,8 +191,8 @@ export default class FormGasto extends React.Component<
                                 Seleccione Tipo
                             </option>
                             {tipoGastos.map((tipo, index) => (
-                                <option key={index} value={tipo}>
-                                    {tipo}
+                                <option key={index} value={tipo.label}>
+                                    {tipo.label}
                                 </option>
                             ))}
                         </select>
@@ -220,6 +233,19 @@ export default class FormGasto extends React.Component<
                             onChange={this.onChangeFormField}
                         ></textarea>
                     </form>
+
+                    { this.state.form._id && (
+                        <>
+                            <hr className="px-4 mb-2"></hr>
+                            <small className="text-muted">id: {this.state.form._id}</small>
+                        </>
+                    )}
+
+                    { this.state.alertMsg && (
+                        <div className="alert alert-warning">
+                            {this.state.alertMsg}
+                        </div>
+                    )}
                 </Modal.Body>
 
                 <Modal.Footer>

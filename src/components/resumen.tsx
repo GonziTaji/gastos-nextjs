@@ -1,10 +1,6 @@
-import moment from 'moment';
 import React from 'react';
-import { Dropdown, DropdownButton } from 'react-bootstrap';
-import { deleteGasto } from '../pages-lib/gastoService';
 import { listResumen } from '../pages-lib/resumenService';
 import { currency } from '../pages-lib/utils';
-import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 import { IResumen } from '../shared/interfaces/resumen';
 
@@ -72,7 +68,7 @@ export default class Resumen extends React.Component<
                     </div>
 
                     <div className="card-body">
-                        <table className="table table-sm">
+                        <table className="table table-sm table-hover">
                             <thead>
                                 <tr>
                                     <th> Pagador </th>
@@ -97,7 +93,7 @@ export default class Resumen extends React.Component<
                             </tbody>
                         </table>
 
-                        <table className="table table-sm">
+                        <table className="table table-sm table-hover">
                             <thead>
                                 <tr>
                                     <th>Total</th>

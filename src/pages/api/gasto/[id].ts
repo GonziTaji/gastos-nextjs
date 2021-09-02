@@ -60,7 +60,7 @@ export default async function gastoid(req: NextApiRequest, res: NextApiResponse<
     }
 
     res.status(status).json(json)
-};
+}
 
 async function editarGasto(id: string, body: IGasto): Promise<UpdateResult> {
     // TODO: validate body
