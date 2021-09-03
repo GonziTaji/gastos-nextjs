@@ -1,5 +1,6 @@
 import moment from 'moment';
 import React from 'react';
+import { Tab, TabContent, Tabs } from 'react-bootstrap';
 import FormGasto from '../components/form-gasto';
 import GraficoGastos from '../components/grafico-gastos';
 import GraficoGastosMensuales from '../components/grafico-gastosMensuales';
@@ -267,27 +268,26 @@ export default class MonthlyView extends React.Component<
                     </div>
                 </div>
 
-                <div className="row">
-                    <div className="col">
-                        <h3> Gastos </h3>
-                        <ListaGastos
-                            dateFrom={dateFrom}
-                            dateTo={dateTo}
-                            tipo="gasto"
-                            selectGasto={this.showModal}
-                        ></ListaGastos>
-                    </div>
-
-                    <div className="col">
-                        <h3> Abonos </h3>
+                <Tabs defaultActiveKey="gastos">
+                    <Tab eventKey="gastos" title={<h3>Gastos</h3>}>
+                        <TabContent>
+                            <ListaGastos
+                                dateFrom={dateFrom}
+                                dateTo={dateTo}
+                                tipo="gasto"
+                                selectGasto={this.showModal}
+                            ></ListaGastos>
+                        </TabContent>
+                    </Tab>
+                    <Tab eventKey="abonos" title={<h3>Abonos</h3>}>
                         <ListaGastos
                             dateFrom={dateFrom}
                             dateTo={dateTo}
                             tipo="abono"
                             selectGasto={this.showModal}
                         ></ListaGastos>
-                    </div>
-                </div>
+                    </Tab>
+                </Tabs>
 
                 <FormGasto
                     gastoId={this.state.selectedGastoId}

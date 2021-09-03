@@ -6,6 +6,7 @@ import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 
 interface ListaGastosProps extends ListaGastosFilters {
+    // eslint-disable-next-line no-unused-vars
     selectGasto: (id: string) => void
 }
 
@@ -103,6 +104,13 @@ export default class ListaGastos extends React.Component<
                         </thead>
 
                         <tbody>
+                            {this.state.gastos.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="text-center">
+                                        Sin resultados
+                                    </td>
+                                </tr>
+                            )}
                             {this.state.gastos.map((gasto) =>
                                 <tr key={gasto._id}>
                                     {/* <td>{gasto._id}</td> */}
