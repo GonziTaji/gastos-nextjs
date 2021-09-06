@@ -103,11 +103,11 @@ export default class FormGasto extends React.Component<
 
     async cargarGasto(id: string) {
         try {
-            const { gasto }: { gasto: IGasto } = await loadGasto(id);
+            const { gasto } = await loadGasto(id);
 
             let alertMsg = '';
 
-            if (!this.state.tipoGastos.find(tipo => tipo.label === gasto.tipo)) {
+            if (!tipoGastos.find(tipo => tipo.label.trim().toUpperCase() === gasto.tipo.trim().toUpperCase())) {
                 alertMsg = `Tipo de gasto '${gasto.tipo}' no encontrado. Seleccione tipo correspondiente.`;
                 gasto.tipo = '';
             }
