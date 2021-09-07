@@ -1,13 +1,12 @@
 import React from 'react';
-import { listResumen } from '../pages-lib/resumenService';
 import { currency } from '../pages-lib/utils';
-import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 import { IResumen } from '../shared/interfaces/resumen';
 
-interface ResumenProps extends ListaGastosFilters {}
+interface ResumenProps {
+    resumen: IResumen[];
+}
 
 interface ResumenState {
-    resumen: IResumen[];
 }
 
 export default class Resumen extends React.Component<
@@ -16,49 +15,10 @@ export default class Resumen extends React.Component<
 > {
     constructor(props: ResumenProps) {
         super(props);
-
-        this.state = {
-            resumen: [],
-        };
-
-        this.loadResumen = this.loadResumen.bind(this);
-    }
-
-    componentDidMount() {
-        this.loadResumen();
-    }
-
-    componentDidUpdate({ dateFrom, dateTo }: ResumenProps) {
-        if (dateFrom !== this.props.dateFrom || dateTo !== this.props.dateTo) {
-            this.loadResumen();
-        }
-    }
-
-    async loadResumen() {
-        const { dateFrom, dateTo } = this.props;
-
-        const { resumen, error } = await listResumen({ dateFrom, dateTo });
-
-        if (error) {
-            console.error(error);
-            alert('No se pudieron cargar los resumen.' + error.message);
-            return;
-        }
-
-        if (!Array.isArray(resumen)) {
-            console.warn(
-                'Resumen.loadGastos: resumen is not an array, but ' +
-                    typeof resumen,
-                resumen
-            );
-            return;
-        }
-
-        this.setState({ resumen });
     }
 
     render() {
-        const totalGastos = this.state.resumen.reduce((acc, curr) => acc += curr.gasto, 0);
+        const totalGastos = this.props.resumen ? this.props.resumen.reduce((acc, curr) => acc += curr.gasto, 0) : 0;
 
         return (
             <>
@@ -78,7 +38,7 @@ export default class Resumen extends React.Component<
                                 </tr>
                             </thead>
                             <tbody>
-                                {this.state.resumen.map(({ _id, gasto, abono, pagador }) => {
+                                {this.props.resumen.map(({ _id, gasto, abono, pagador }) => {
                                     const deuda = (totalGastos / 2) - gasto;
 
                                     return (

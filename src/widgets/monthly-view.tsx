@@ -1,12 +1,19 @@
+import { ChartData } from 'chart.js';
 import moment from 'moment';
 import React from 'react';
-import { Tab, TabContent, Tabs } from 'react-bootstrap';
+import { Tab, Tabs } from 'react-bootstrap';
 import FormGasto from '../components/form-gasto';
 import GraficoGastos from '../components/grafico-gastos';
 import GraficoGastosMensuales from '../components/grafico-gastosMensuales';
 import ListaGastos from '../components/lista-gastos';
+import LoadingOverlay from '../components/loading-overlay';
 import Resumen from '../components/resumen';
+import { listGastos, listTotalesPorMeses } from '../pages-lib/gastoService';
+import { listResumen } from '../pages-lib/resumenService';
+import { colorTipoGasto } from '../shared/data/tipoGasto';
+import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
+import { IResumen } from '../shared/interfaces/resumen';
 
 interface MonthlyViewProps {}
 
@@ -16,6 +23,12 @@ interface MonthlyViewState {
     year: number;
     showGastoModal: boolean;
     selectedGastoId: string; 
+    gastos: IGasto[];
+    abonos: IGasto[];
+    resumen: IResumen[];
+    barChartData: ChartData;
+    pieChartData: ChartData;
+    loading: boolean;
 }
 
 const dateFormat = 'yyyy-MM-DD';
@@ -35,7 +48,23 @@ export default class MonthlyView extends React.Component<
             year: currentYear,
             filters: this.getToFromDates(lastMonth, currentYear),
             showGastoModal: false,
-            selectedGastoId: ''
+            selectedGastoId: '',
+            gastos: [],
+            abonos: [],
+            resumen: [],
+            barChartData: {
+                datasets: [{
+                    data: []
+                }],
+                labels: []
+            },
+            pieChartData: {
+                datasets: [{
+                    data: []
+                }],
+                labels: []
+            },
+            loading: false,
         };
 
         this.years = [currentYear];
@@ -61,6 +90,33 @@ export default class MonthlyView extends React.Component<
             margin: 'auto',
             width: 'fit-content'
         } 
+    }
+
+    componentDidMount() {
+        this.loadData();
+    }
+
+    componentDidUpdate(_prevProps: MonthlyViewProps, prevState: MonthlyViewState) {
+        const { dateFrom: prevDateFrom, dateTo: prevDateTo } = prevState.filters;
+        const { dateFrom, dateTo } = this.state.filters;
+
+        if (dateTo !== prevDateTo || dateFrom !== prevDateFrom) {
+            this.loadData();
+        }
+    }
+
+    loadData() {
+        this.setState({ loading: true }, async () => {
+            await Promise.all([
+                this.loadResumen(),
+                this.loadGastos(),
+                this.loadAbonos(),
+                this.loadPieChartData(),
+                this.loadBarChartData(),
+            ]);
+
+            this.setState({ loading: false });
+        });
     }
 
     onChangeMonth(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -164,14 +220,173 @@ export default class MonthlyView extends React.Component<
     nuevoGasto() {
         this.showModal()
     }
+    
+    async loadResumen() {
+        const { dateFrom, dateTo } = this.state.filters;
 
-    render() {
-        const { dateTo, dateFrom } = this.state.filters;
+        const { resumen, error } = await listResumen({ dateFrom, dateTo });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        if (!Array.isArray(resumen)) {
+            console.warn(
+                'Resumen.loadGastos: resumen is not an array, but ' +
+                    typeof resumen,
+                resumen
+            );
+            return;
+        }
+
+        this.setState({ resumen });
+    }
+
+    async loadGastos() {
+        const { dateFrom, dateTo } = this.state.filters;
+
+        const { gastos, error } = await listGastos({ dateFrom, dateTo, tipo: 'gasto' });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        if (!Array.isArray(gastos)) {
+            console.warn(
+                'ListaGastos.loadGastos: gastos is not an array, but ' +
+                    typeof gastos,
+                gastos
+            );
+            return;
+        }
+
+        this.setState({ gastos });
+    }
+
+    async loadAbonos() {
+        const { dateFrom, dateTo } = this.state.filters;
+
+        const { gastos: abonos, error } = await listGastos({ dateFrom, dateTo, tipo: 'abono' });
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        if (!Array.isArray(abonos)) {
+            console.warn(
+                'ListaGastos.loadGastos: gastos is not an array, but ' +
+                    typeof abonos,
+                abonos
+            );
+            return;
+        }
+
+        this.setState({ abonos });
+    }
+
+    async loadPieChartData() {
+        const { dateFrom, dateTo } = this.state.filters;
+
+        const { gastos, error } = await listGastos({ dateFrom, dateTo }, true);
+    
+        if (error) {
+            alert(error);
+            console.error(error);
+        }
+    
+        const data = [];
+        const labels = [];
+        const backgroundColor = [];
+        
+        if (Array.isArray(gastos)) {
+            for (const gasto of gastos) {
+                data.push(gasto.monto);
+                labels.push(gasto.tipo);
+                backgroundColor.push(colorTipoGasto(gasto.tipo))
+            }
+    
+        }
+
+        this.setState({
+            pieChartData: {
+                datasets: [{
+                    data,
+                    backgroundColor
+                }],
+                labels
+            }
+        });
+    }
+
+    async loadBarChartData() {
+        const { dateFrom } = this.state.filters;
 
         const mes = moment(dateFrom).month() + 1;
+        const { meses, error } = await listTotalesPorMeses(mes);
+    
+        if (error) {
+            console.error(error);
+            return;
+        }
+    
+        const data = [];
+        const labels = [];
+        const backgroundColor = [];
+        const borderColor = [];
 
+        const colorMesesAnteriores = '#ed7864';
+        const colorMesActual = '#7864ed';
+
+        if (Array.isArray(meses)) {
+            for (let i = 0; i < meses.length; i++) {
+                const gastoMensual = meses[i];
+
+                data.push(gastoMensual.monto);
+                labels.push(moment.months()[gastoMensual.mes - 1]);
+
+                const color = i === meses.length - 1 ? colorMesActual : colorMesesAnteriores;
+                
+                backgroundColor.push(color + '40');
+                borderColor.push(color);
+            }
+        }
+
+        this.setState({
+            barChartData: {
+                datasets: [{
+                    label: 'Total Gasto',
+                    data,
+                    backgroundColor,
+                    borderColor,
+                    borderWidth: 1,
+
+                }],
+                labels
+            }
+        });
+    }
+
+    // dashboard should control every component
+    // - components should recieve data and execute delegates
+
+    // methods needed for actions (delegates):
+    // - Load gasto
+    // - Update gasto
+    // - Delete gasto
+    // - Create gasto
+
+    render() {
         return (
             <>
+                <LoadingOverlay
+                    message="Cargando..."
+                    iconClass="spinner-border text-primary"
+                    show={this.state.loading}
+                ></LoadingOverlay>
+
                 <h1 className="d-flex justify-content-between align-items-end">
                     <span>Vista mensual</span>
                     <button type="button" className="btn btn-success" onClick={this.nuevoGasto}>
@@ -248,21 +463,21 @@ export default class MonthlyView extends React.Component<
 
                 <div className="py-2">
                     <Resumen
-                        dateFrom={dateFrom}
-                        dateTo={dateTo}
-                    ></Resumen>
+                        resumen={this.state.resumen}
+                    >
+                        <p>AYYY LAMAO</p>
+                    </Resumen>
 
                     <div className="row">
                         <div className="col-12 col-sm-6">
                             <GraficoGastos
-                                dateTo={dateTo}
-                                dateFrom={dateFrom}
+                                chartData={this.state.pieChartData}
                             ></GraficoGastos>
                         </div>
 
                         <div className="col-12 col-sm-6">
                             <GraficoGastosMensuales
-                                mes={mes}
+                                chartData={this.state.barChartData}
                             ></GraficoGastosMensuales>
                         </div>
                     </div>
@@ -270,20 +485,14 @@ export default class MonthlyView extends React.Component<
 
                 <Tabs defaultActiveKey="gastos">
                     <Tab eventKey="gastos" title={<h3>Gastos</h3>}>
-                        <TabContent>
-                            <ListaGastos
-                                dateFrom={dateFrom}
-                                dateTo={dateTo}
-                                tipo="gasto"
-                                selectGasto={this.showModal}
-                            ></ListaGastos>
-                        </TabContent>
+                        <ListaGastos
+                            gastos={this.state.gastos}
+                            selectGasto={this.showModal}
+                        ></ListaGastos>
                     </Tab>
                     <Tab eventKey="abonos" title={<h3>Abonos</h3>}>
                         <ListaGastos
-                            dateFrom={dateFrom}
-                            dateTo={dateTo}
-                            tipo="abono"
+                            gastos={this.state.abonos}
                             selectGasto={this.showModal}
                         ></ListaGastos>
                     </Tab>

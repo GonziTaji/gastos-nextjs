@@ -3,7 +3,7 @@ import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { saveGasto, loadGasto } from '../pages-lib/gastoService';
 import { personas } from '../shared/data/personas';
-import { TipoGasto, tipoGastos } from '../shared/data/tipoGasto';
+import { tipoGastos } from '../shared/data/tipoGasto';
 import { IGasto } from '../shared/interfaces/gasto';
 
 interface FormGastoProps {
@@ -14,7 +14,6 @@ interface FormGastoProps {
 
 interface FormGastoState {
     form: IGasto;
-    tipoGastos: TipoGasto[];
     personas: string[];
     gastoOriginal: IGasto;
     alertMsg: string;
@@ -41,7 +40,6 @@ export default class FormGasto extends React.Component<
                 detalle: '',
                 observaciones: '',
             },
-            tipoGastos: [],
             personas: [],
             gastoOriginal: {} as IGasto,
             alertMsg: '',

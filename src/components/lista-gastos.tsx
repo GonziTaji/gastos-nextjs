@@ -1,17 +1,16 @@
 import React from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { deleteGasto, listGastos } from '../pages-lib/gastoService';
+import { deleteGasto } from '../pages-lib/gastoService';
 import { currency, date } from '../pages-lib/utils';
 import { IGasto } from '../shared/interfaces/gasto';
-import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 
-interface ListaGastosProps extends ListaGastosFilters {
+interface ListaGastosProps {
     // eslint-disable-next-line no-unused-vars
-    selectGasto: (id: string) => void
+    selectGasto: (id: string) => void;
+    gastos: IGasto[];
 }
 
 interface ListaGastosState {
-    gastos: IGasto[];
 }
 
 export default class ListaGastos extends React.Component<
@@ -20,47 +19,9 @@ export default class ListaGastos extends React.Component<
 > {
     constructor(props: ListaGastosProps) {
         super(props);
- 
-        this.state = {
-            gastos: [],
-        };
 
-        this.loadGastos = this.loadGastos.bind(this);
         this.eliminarGasto = this.eliminarGasto.bind(this);
         this.editarGasto = this.editarGasto.bind(this);
-    }
-
-    componentDidMount() {
-        this.loadGastos();
-    }
-
-    componentDidUpdate({ dateFrom, dateTo }: ListaGastosProps) {
-        if (dateFrom !== this.props.dateFrom || dateTo !== this.props.dateTo) {
-            this.loadGastos();
-        }
-    }
-
-    async loadGastos() {
-        const { dateFrom, dateTo, tipo } = this.props;
-
-        const { gastos, error } = await listGastos({ dateFrom, dateTo, tipo });
-
-        if (error) {
-            console.error(error);
-            alert('No se pudieron cargar los gastos.' + error.message);
-            return;
-        }
-
-        if (!Array.isArray(gastos)) {
-            console.warn(
-                'ListaGastos.loadGastos: gastos is not an array, but ' +
-                    typeof gastos,
-                gastos
-            );
-            return;
-        }
-
-        this.setState({ gastos });
     }
 
     async eliminarGasto(e: React.MouseEvent<HTMLElement>) {
@@ -73,8 +34,6 @@ export default class ListaGastos extends React.Component<
             alert('No se pudo eliminar el gasto. ' + error.message);
             return;
         }
-
-        this.loadGastos();
     }
 
     editarGasto(e: React.MouseEvent<HTMLElement>) {
@@ -84,10 +43,7 @@ export default class ListaGastos extends React.Component<
 
     render() {
         return (
-            <div style={{ fontSize: '0.8rem' }}>
-                <button className="btn btn-primary" onClick={this.loadGastos}>
-                    Actualizar
-                </button>
+            <div>
                 <div className="table-responsive">
                     <table className="table table-sm">
                         <thead>
@@ -104,14 +60,14 @@ export default class ListaGastos extends React.Component<
                         </thead>
 
                         <tbody>
-                            {this.state.gastos.length === 0 && (
+                            {this.props.gastos.length === 0 && (
                                 <tr>
                                     <td colSpan={7} className="text-center">
                                         Sin resultados
                                     </td>
                                 </tr>
                             )}
-                            {this.state.gastos.map((gasto) =>
+                            {this.props.gastos.map((gasto) =>
                                 <tr key={gasto._id}>
                                     {/* <td>{gasto._id}</td> */}
                                     <td>{date(gasto.fecha)}</td>
@@ -119,7 +75,11 @@ export default class ListaGastos extends React.Component<
                                     <td>{gasto.tipo}</td>
                                     <td>{currency(gasto.monto)}</td>
                                     <td>{gasto.detalle}</td>
-                                    <td className="d-none d-md-table-cell">{gasto.observaciones}</td>
+                                    <td className="d-none d-md-table-cell" style={{
+                                        maxWidth: '30vw',
+                                        overflow: 'hidden',
+                                        whiteSpace: 'nowrap',
+                                    }}>{gasto.observaciones}</td>
                                     <td>
                                         <Dropdown>
                                             <Dropdown.Toggle id="dropdown-custom-1">
