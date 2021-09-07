@@ -21,7 +21,7 @@ export default async function gasto(req: NextApiRequest, res: NextApiResponse<an
                 json = { message: 'not found' };
                 break;
         }
-    } catch (e) {
+    } catch (e: any) {
         status = 500;
         json = { error: e.toString(), errorDetails: e.stack.split('\n') };
     }
@@ -43,7 +43,7 @@ async function mesesAnteriores(mes: number) {
         },
         {
             $match: {
-                month: { $gt: mes - 4 }
+                month: { $gt: mes - 4, $lte: mes }
             }
         },
         {
