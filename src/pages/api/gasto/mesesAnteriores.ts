@@ -11,7 +11,8 @@ export default async function gasto(req: NextApiRequest, res: NextApiResponse<an
         switch (req.method) {
             case 'GET': {
                 const mes = parseInt(req.query.mes as string) || new Date().getMonth() + 1;
-                const meses = await mesesAnteriores(mes);
+                const anio = parseInt(req.query.anio as string) || new Date().getFullYear() + 1;
+                const meses = await mesesAnteriores(mes, anio);
                 json = { meses };
                 break;
             }
@@ -29,7 +30,7 @@ export default async function gasto(req: NextApiRequest, res: NextApiResponse<an
     res.status(status).json(json);
 }
 
-async function mesesAnteriores(mes: number) {
+async function mesesAnteriores(mes: number, anio: number) {
     const client = new MongoClient(MONGO_URL);
 
     await client.connect();
@@ -43,7 +44,8 @@ async function mesesAnteriores(mes: number) {
         },
         {
             $match: {
-                month: { $gt: mes - 4, $lte: mes }
+                month: { $gt: mes - 4, $lte: mes + 1 },
+                year: { $gte: anio }
             }
         },
         {

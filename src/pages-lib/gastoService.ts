@@ -25,8 +25,8 @@ export function listGastos(filters: ListaGastosFilters = {} as any, grouped = fa
     );
 }
 
-export function listTotalesPorMeses(mes: number): Promise<{meses: IGasto[], error?: any }> {
-    return fetch('/api/gasto/mesesAnteriores?mes=' + mes).then((res) => res.json());
+export function listTotalesPorMeses(mes: number, anio: number): Promise<{meses: IGasto[], error?: any }> {
+    return fetch('/api/gasto/mesesAnteriores?mes=' + mes + '&anio=' + anio).then((res) => res.json());
 }
 
 export function deleteGasto(id: string): Promise<{error?: any}> {

@@ -29,6 +29,15 @@ interface MonthlyViewState {
     barChartData: ChartData;
     pieChartData: ChartData;
     loading: boolean;
+    oldData: {
+        dateFrom: string;
+        dateTo: string;
+        gastos: IGasto[];
+        abonos: IGasto[];
+        resumen: IResumen[];
+        barChartData: ChartData;
+        pieChartData: ChartData;
+    }[]
 }
 
 const dateFormat = 'yyyy-MM-DD';
@@ -65,6 +74,7 @@ export default class MonthlyView extends React.Component<
                 labels: []
             },
             loading: false,
+            oldData: [],
         };
 
         this.years = [currentYear];
@@ -106,6 +116,26 @@ export default class MonthlyView extends React.Component<
     }
 
     loadData() {
+        const {
+            filters: { dateFrom, dateTo },
+            gastos,
+            abonos,
+            resumen,
+            barChartData,
+            pieChartData,
+            oldData
+        } = this.state;
+
+        oldData.push({
+            dateFrom,
+            dateTo,
+            gastos,
+            abonos,
+            resumen,
+            barChartData,
+            pieChartData,
+        });
+
         this.setState({ loading: true }, async () => {
             await Promise.all([
                 this.loadResumen(),
@@ -115,7 +145,7 @@ export default class MonthlyView extends React.Component<
                 this.loadBarChartData(),
             ]);
 
-            this.setState({ loading: false });
+            this.setState({ loading: false, oldData });
         });
     }
 
@@ -324,8 +354,11 @@ export default class MonthlyView extends React.Component<
     async loadBarChartData() {
         const { dateFrom } = this.state.filters;
 
-        const mes = moment(dateFrom).month() + 1;
-        const { meses, error } = await listTotalesPorMeses(mes);
+        const date = moment(dateFrom);
+
+        const mes = date.month() + 1;
+        const anio =  date.year();
+        const { meses, error } = await listTotalesPorMeses(mes, anio);
     
         if (error) {
             console.error(error);
@@ -347,7 +380,7 @@ export default class MonthlyView extends React.Component<
                 data.push(gastoMensual.monto);
                 labels.push(moment.months()[gastoMensual.mes - 1]);
 
-                const color = i === meses.length - 1 ? colorMesActual : colorMesesAnteriores;
+                const color = mes === gastoMensual.mes ? colorMesActual : colorMesesAnteriores;
                 
                 backgroundColor.push(color + '40');
                 borderColor.push(color);
