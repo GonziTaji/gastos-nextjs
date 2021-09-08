@@ -8,9 +8,8 @@ import GraficoGastosMensuales from '../components/grafico-gastosMensuales';
 import ListaGastos from '../components/lista-gastos';
 import LoadingOverlay from '../components/loading-overlay';
 import Resumen from '../components/resumen';
-import { listGastos, listTotalesPorMeses } from '../pages-lib/gastoService';
-import { listResumen } from '../pages-lib/resumenService';
 import { colorTipoGasto } from '../shared/data/tipoGasto';
+import { DashboardData } from '../shared/interfaces/dashboardData';
 import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
 import { IResumen } from '../shared/interfaces/resumen';
@@ -137,15 +136,35 @@ export default class MonthlyView extends React.Component<
         });
 
         this.setState({ loading: true }, async () => {
-            await Promise.all([
-                this.loadResumen(),
-                this.loadGastos(),
-                this.loadAbonos(),
-                this.loadPieChartData(),
-                this.loadBarChartData(),
-            ]);
+            const queryString = [];
 
-            this.setState({ loading: false, oldData });
+
+            if(dateFrom) {
+                queryString.push('dateFrom=' + dateFrom);
+            }
+        
+            if(dateTo) {
+                queryString.push('dateTo=' + dateTo);
+            }
+        
+            const { error, ...dashboardData } = await fetch('/api/dashboard?' + queryString.join('&')).then((res) =>
+                res.json() as (Promise<DashboardData>)
+            );
+            
+            if (error) {
+                console.error(error);
+                alert('Error al cargar la data' + error);
+            }
+
+            this.setState({
+                ...this.state,
+                loading: false,
+                gastos: dashboardData.gastos,
+                abonos: dashboardData.abonos,
+                resumen: dashboardData.resumen,
+                pieChartData: this.getPieChartData(dashboardData.agrupados),
+                barChartData: this.getBarChartData(dashboardData.meses),
+            });
         });
     }
 
@@ -250,83 +269,8 @@ export default class MonthlyView extends React.Component<
     nuevoGasto() {
         this.showModal()
     }
-    
-    async loadResumen() {
-        const { dateFrom, dateTo } = this.state.filters;
 
-        const { resumen, error } = await listResumen({ dateFrom, dateTo });
-
-        if (error) {
-            console.error(error);
-            return;
-        }
-
-        if (!Array.isArray(resumen)) {
-            console.warn(
-                'Resumen.loadGastos: resumen is not an array, but ' +
-                    typeof resumen,
-                resumen
-            );
-            return;
-        }
-
-        this.setState({ resumen });
-    }
-
-    async loadGastos() {
-        const { dateFrom, dateTo } = this.state.filters;
-
-        const { gastos, error } = await listGastos({ dateFrom, dateTo, tipo: 'gasto' });
-
-        if (error) {
-            console.error(error);
-            return;
-        }
-
-        if (!Array.isArray(gastos)) {
-            console.warn(
-                'ListaGastos.loadGastos: gastos is not an array, but ' +
-                    typeof gastos,
-                gastos
-            );
-            return;
-        }
-
-        this.setState({ gastos });
-    }
-
-    async loadAbonos() {
-        const { dateFrom, dateTo } = this.state.filters;
-
-        const { gastos: abonos, error } = await listGastos({ dateFrom, dateTo, tipo: 'abono' });
-
-        if (error) {
-            console.error(error);
-            return;
-        }
-
-        if (!Array.isArray(abonos)) {
-            console.warn(
-                'ListaGastos.loadGastos: gastos is not an array, but ' +
-                    typeof abonos,
-                abonos
-            );
-            return;
-        }
-
-        this.setState({ abonos });
-    }
-
-    async loadPieChartData() {
-        const { dateFrom, dateTo } = this.state.filters;
-
-        const { gastos, error } = await listGastos({ dateFrom, dateTo }, true);
-    
-        if (error) {
-            alert(error);
-            console.error(error);
-        }
-    
+    getPieChartData(gastos: IGasto[]) {
         const data = [];
         const labels = [];
         const backgroundColor = [];
@@ -340,38 +284,25 @@ export default class MonthlyView extends React.Component<
     
         }
 
-        this.setState({
-            pieChartData: {
-                datasets: [{
-                    data,
-                    backgroundColor
-                }],
-                labels
-            }
-        });
+        return {
+            datasets: [{
+                data,
+                backgroundColor
+            }],
+            labels
+        };
     }
 
-    async loadBarChartData() {
-        const { dateFrom } = this.state.filters;
-
-        const date = moment(dateFrom);
-
-        const mes = date.month() + 1;
-        const anio =  date.year();
-        const { meses, error } = await listTotalesPorMeses(mes, anio);
-    
-        if (error) {
-            console.error(error);
-            return;
-        }
-    
-        const data = [];
-        const labels = [];
-        const backgroundColor = [];
-        const borderColor = [];
+    getBarChartData(meses: any) {  
+        const { dateFrom } = this.state.filters;  
+        const data: number[] = [];
+        const labels: string[] = [];
+        const backgroundColor: string[] = [];
+        const borderColor: string[] = [];
 
         const colorMesesAnteriores = '#ed7864';
         const colorMesActual = '#7864ed';
+        const lineBodyAlpha = 40;
 
         if (Array.isArray(meses)) {
             for (let i = 0; i < meses.length; i++) {
@@ -380,26 +311,23 @@ export default class MonthlyView extends React.Component<
                 data.push(gastoMensual.monto);
                 labels.push(moment.months()[gastoMensual.mes - 1]);
 
-                const color = mes === gastoMensual.mes ? colorMesActual : colorMesesAnteriores;
-                
-                backgroundColor.push(color + '40');
+                const color = moment(dateFrom).month() + 1 === gastoMensual.mes ? colorMesActual : colorMesesAnteriores;
+
+                backgroundColor.push(color + lineBodyAlpha);
                 borderColor.push(color);
             }
         }
-
-        this.setState({
-            barChartData: {
-                datasets: [{
-                    label: 'Total Gasto',
-                    data,
-                    backgroundColor,
-                    borderColor,
-                    borderWidth: 1,
-
-                }],
-                labels
-            }
-        });
+        
+        return {
+            datasets: [{
+                label: 'Total Gasto',
+                data,
+                backgroundColor,
+                borderColor,
+                borderWidth: 1,
+            }],
+            labels
+        };
     }
 
     // dashboard should control every component

@@ -4,7 +4,7 @@
         const fs = require('fs');
         const csvParse = require("csv-parse/lib/sync");
 
-        const mongourl = 'mongodb://localhost:27017';
+        const mongourl = 'mongodb+srv://dbAdmin:gonzalo123@cluster0.jakm5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
         const filepath = process.argv[2];
         
         console.log('filepath='+filepath);
