@@ -1,8 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IGasto } from '../../../shared/interfaces/gasto';
 import { ConfiguredMongoClient, nuevoGasto } from '../../../api-lib/mongo';
+import { authenticateWithHeader } from '../../../api-lib/authenticateWithHeader';
 
 export default async function gasto(req: NextApiRequest, res: NextApiResponse<any>) {
+    if (!authenticateWithHeader(req)) {
+        return res.status(401).end();
+    }
+
     let status = 200,
         json = {};
 
@@ -23,7 +28,7 @@ export default async function gasto(req: NextApiRequest, res: NextApiResponse<an
         }
     } catch (e: any) {
         status = 500;
-        json = { error: e.toString(), errorDetails: e.stack.split('\n') };
+        json = { message: e.toString(), error: e };
     }
 
     res.status(status).json(json);

@@ -19,4 +19,3 @@ export function currency(input: number) {
 export function date(input: string | Date, format: string = 'DD/MM/YY') {
     return moment(input).format(format);
 }
-  

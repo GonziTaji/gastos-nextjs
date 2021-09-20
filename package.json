@@ -13,9 +13,10 @@
     "bootstrap-icons": "^1.5.0",
     "chart.js": "^3.5.1",
     "csv-parse": "^4.16.0",
+    "jws": "^4.0.0",
     "moment": "^2.29.1",
     "mongodb": "^4.0.1",
-    "next": "11.0.1",
+    "next": "^11.1.2",
     "react": "17.0.2",
     "react-bootstrap": "^2.0.0-beta.4",
     "react-chartjs-2": "^3.0.4",
@@ -23,6 +24,8 @@
     "sass": "^1.36.0"
   },
   "devDependencies": {
+    "@types/jws": "^3.2.4",
+    "@types/next": "^9.0.0",
     "@types/react": "17.0.15",
     "@types/tinycolor2": "^1.4.3",
     "eslint": "^7.32.0",

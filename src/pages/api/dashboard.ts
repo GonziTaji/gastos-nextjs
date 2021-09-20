@@ -1,10 +1,15 @@
 import moment from "moment";
 import { NextApiRequest, NextApiResponse } from "next";
+import { authenticateWithHeader } from "../../api-lib/authenticateWithHeader";
 import { ConfiguredMongoClient, mesesAnteriores, resumenMensual, verGastos, verGastosAgrupados } from "../../api-lib/mongo";
 import { DashboardData } from "../../shared/interfaces/dashboardData";
 import { ListaGastosFilters } from "../../shared/interfaces/lista-gasto-filters";
 
 export default async function dashboard(req: NextApiRequest, res: NextApiResponse<any>) {
+    if (!authenticateWithHeader(req)) {
+        return res.status(401).end();
+    }
+
     let status = 200,
         json = {};
 
@@ -38,7 +43,7 @@ export default async function dashboard(req: NextApiRequest, res: NextApiRespons
         }
     } catch (e: any) {
         status = 500;
-        json = { error: e.toString(), errorDetails: e.stack.split('\n') };
+        json = { message: e.toString(), error: e.stack.split('\n') };
     }
 
     res.status(status).json(json);

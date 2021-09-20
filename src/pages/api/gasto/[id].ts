@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { authenticateWithHeader } from '../../../api-lib/authenticateWithHeader';
 import { ConfiguredMongoClient, editarGasto, eliminarGasto, verGasto } from '../../../api-lib/mongo';
 
 export default async function gastoid(req: NextApiRequest, res: NextApiResponse<any>) {
+    if (!authenticateWithHeader(req)) {
+        return res.status(401).end();
+    }
+
     let status = 200,
         json = {};
 
@@ -32,8 +37,15 @@ export default async function gastoid(req: NextApiRequest, res: NextApiResponse<
             case 'GET': {
                 const mongoClient = await new ConfiguredMongoClient().connect();
                 const gasto = await verGasto(id, mongoClient);
+
+                if (!gasto) {
+                    status = 404;
+                    json = { message: 'not found' }
+                } else {
+                    json = { gasto };
+                }
+
                 await mongoClient.close();
-                json = { gasto };
                 break;
             }
 
@@ -60,7 +72,7 @@ export default async function gastoid(req: NextApiRequest, res: NextApiResponse<
             }
     } catch (e: any) {
         status = 500;
-        json = { error: e.toString(), errorDetails: e.stack.split('\n') }
+        json = { message: e.toString(), error: e.stack.split('\n') }
     }
 
     res.status(status).json(json)

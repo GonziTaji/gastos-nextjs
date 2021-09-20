@@ -1,5 +1,6 @@
 import { ChartData } from 'chart.js';
 import moment from 'moment';
+import Router from 'next/router';
 import React from 'react';
 import { Tab, Tabs } from 'react-bootstrap';
 import FormGasto from '../components/form-gasto';
@@ -8,7 +9,9 @@ import GraficoGastosMensuales from '../components/grafico-gastosMensuales';
 import ListaGastos from '../components/lista-gastos';
 import LoadingOverlay from '../components/loading-overlay';
 import Resumen from '../components/resumen';
+import { getStoredAuthToken } from '../pages-lib/authService';
 import { colorTipoGasto } from '../shared/data/tipoGasto';
+import { ApiErrorBody } from '../shared/interfaces/apiErrorbody';
 import { DashboardData } from '../shared/interfaces/dashboardData';
 import { IGasto } from '../shared/interfaces/gasto';
 import { ListaGastosFilters } from '../shared/interfaces/lista-gasto-filters';
@@ -28,15 +31,6 @@ interface MonthlyViewState {
     barChartData: ChartData;
     pieChartData: ChartData;
     loading: boolean;
-    oldData: {
-        dateFrom: string;
-        dateTo: string;
-        gastos: IGasto[];
-        abonos: IGasto[];
-        resumen: IResumen[];
-        barChartData: ChartData;
-        pieChartData: ChartData;
-    }[]
 }
 
 const dateFormat = 'yyyy-MM-DD';
@@ -72,8 +66,7 @@ export default class MonthlyView extends React.Component<
                 }],
                 labels: []
             },
-            loading: false,
-            oldData: [],
+            loading: false
         };
 
         this.years = [currentYear];
@@ -90,7 +83,12 @@ export default class MonthlyView extends React.Component<
         this.hideModal = this.hideModal.bind(this);
         this.showModal = this.showModal.bind(this);
         this.nuevoGasto = this.nuevoGasto.bind(this);
+
+        this.authToken = getStoredAuthToken();
+        console.log(this.authToken);
     }
+
+    readonly authToken: string;
 
     readonly years: number[];
 
@@ -115,29 +113,10 @@ export default class MonthlyView extends React.Component<
     }
 
     loadData() {
-        const {
-            filters: { dateFrom, dateTo },
-            gastos,
-            abonos,
-            resumen,
-            barChartData,
-            pieChartData,
-            oldData
-        } = this.state;
-
-        oldData.push({
-            dateFrom,
-            dateTo,
-            gastos,
-            abonos,
-            resumen,
-            barChartData,
-            pieChartData,
-        });
+        const { filters: { dateFrom, dateTo } } = this.state;
 
         this.setState({ loading: true }, async () => {
             const queryString = [];
-
 
             if(dateFrom) {
                 queryString.push('dateFrom=' + dateFrom);
@@ -146,15 +125,23 @@ export default class MonthlyView extends React.Component<
             if(dateTo) {
                 queryString.push('dateTo=' + dateTo);
             }
-        
-            const { error, ...dashboardData } = await fetch('/api/dashboard?' + queryString.join('&')).then((res) =>
-                res.json() as (Promise<DashboardData>)
-            );
-            
-            if (error) {
-                console.error(error);
-                alert('Error al cargar la data' + error);
+
+            const response = await fetch('/api/dashboard?' + queryString.join('&'), {
+                headers: { Authorization: this.authToken }
+            });
+
+            if (response.status === 401) {
+                return await Router.push('login');
             }
+
+            if (!response.ok) {
+                const errorBody: ApiErrorBody = await response.json();
+                console.error(response.status, response.statusText);
+                alert(`Error al cargar los datos: ${response.status}: ${response.statusText}. ${errorBody.message}`);
+                return;
+            }
+
+            const dashboardData: DashboardData = await response.json();
 
             this.setState({
                 ...this.state,

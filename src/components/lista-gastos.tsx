@@ -1,7 +1,9 @@
+import Router from 'next/router';
 import React from 'react';
 import { Dropdown } from 'react-bootstrap';
 import { deleteGasto } from '../pages-lib/gastoService';
 import { currency, date } from '../pages-lib/utils';
+import { ApiErrorBody } from '../shared/interfaces/apiErrorbody';
 import { IGasto } from '../shared/interfaces/gasto';
 
 interface ListaGastosProps {
@@ -27,13 +29,28 @@ export default class ListaGastos extends React.Component<
     async eliminarGasto(e: React.MouseEvent<HTMLElement>) {
         const id = e.currentTarget.getAttribute('data-id');
 
-        const { error } = await deleteGasto(id || '');
-
-        if (error) {
-            console.error(error);
-            alert('No se pudo eliminar el gasto. ' + error.message);
+        if (!id) {
+            alert('No se pudo eliminar el gasto. Inténtelo de nuevo');
             return;
         }
+
+        const deleteResponse = await deleteGasto(id);
+
+        if (deleteResponse.status === 401) {
+            await Router.push('/login');
+            return
+        }
+
+        if (!deleteResponse.ok) {
+            const body: ApiErrorBody = await deleteResponse.json();
+            console.error(body)
+
+            alert(`No se pudo eliminar el gasto (${deleteResponse.status}): ${deleteResponse.statusText}. ${body.message}` );
+
+            return;
+        }
+
+        alert('Gasto eliminado!');
     }
 
     editarGasto(e: React.MouseEvent<HTMLElement>) {
@@ -60,14 +77,14 @@ export default class ListaGastos extends React.Component<
                         </thead>
 
                         <tbody>
-                            {this.props.gastos.length === 0 && (
+                            {this.props.gastos && this.props.gastos.length === 0 && (
                                 <tr>
                                     <td colSpan={7} className="text-center">
                                         Sin resultados
                                     </td>
                                 </tr>
                             )}
-                            {this.props.gastos.map((gasto) =>
+                            {this.props.gastos && this.props.gastos.map((gasto) =>
                                 <tr key={gasto._id}>
                                     {/* <td>{gasto._id}</td> */}
                                     <td>{date(gasto.fecha)}</td>

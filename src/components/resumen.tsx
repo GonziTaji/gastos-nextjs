@@ -38,7 +38,7 @@ export default class Resumen extends React.Component<
                                 </tr>
                             </thead>
                             <tbody>
-                                {this.props.resumen.map(({ _id, gasto, abono, pagador }) => {
+                                {this.props.resumen && this.props.resumen.map(({ _id, gasto, abono, pagador }) => {
                                     const deuda = (totalGastos / 2) - gasto;
 
                                     return (

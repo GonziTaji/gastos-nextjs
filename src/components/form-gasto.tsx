@@ -1,9 +1,11 @@
 import moment from 'moment';
+import Router from 'next/router';
 import React from 'react';
 import { Modal } from 'react-bootstrap';
 import { saveGasto, loadGasto } from '../pages-lib/gastoService';
 import { personas } from '../shared/data/personas';
 import { tipoGastos } from '../shared/data/tipoGasto';
+import { ApiErrorBody } from '../shared/interfaces/apiErrorbody';
 import { IGasto } from '../shared/interfaces/gasto';
 
 interface FormGastoProps {
@@ -77,13 +79,22 @@ export default class FormGasto extends React.Component<
     }
 
     async guardarGasto(_e: React.MouseEvent, callback: () => void = () => {}) {
-        const { error } = await saveGasto(this.state.form);
+        const saveResponse = await saveGasto(this.state.form);
 
-        if (error) {
-            console.error(error);
-            alert('Error al guardar gasto');
+        if (saveResponse.status === 401) {
+            await Router.push('/login'); 
+            return
+        }
+
+        if (!saveResponse.ok) {
+            const errorBody: ApiErrorBody = await saveResponse.json();
+            console.error(errorBody, saveResponse);
+            alert(`Error al guardar gasto (${saveResponse.status}): ${saveResponse.statusText}. ${errorBody.message}` );
+
             return;
         }
+
+        alert('Gasto guardado');
 
         this.setState({
             form: {
@@ -101,9 +112,26 @@ export default class FormGasto extends React.Component<
 
     async cargarGasto(id: string) {
         try {
-            const { gasto } = await loadGasto(id);
+            const gastoResponse = await loadGasto(id);
+
+            if (gastoResponse.status === 401) {
+                await Router.push('/login');
+                return
+            }
+
+            if (!gastoResponse.ok) {
+                const body: ApiErrorBody = await gastoResponse.json();
+                console.error(body)
+
+                alert(`Error al cargar gasto (${gastoResponse.status}): ${gastoResponse.statusText}. ${body.message}` );
+
+                this.props.hideModal();
+                return
+            }
 
             let alertMsg = '';
+
+            const { gasto }  = await gastoResponse.json() as { gasto: IGasto };
 
             if (!tipoGastos.find(tipo => tipo.label.trim().toUpperCase() === gasto.tipo.trim().toUpperCase())) {
                 alertMsg = `Tipo de gasto '${gasto.tipo}' no encontrado. Seleccione tipo correspondiente.`;
@@ -128,7 +156,7 @@ export default class FormGasto extends React.Component<
         }
     }
 
-    resetForm(callback = () => {}) {
+    resetForm() {
         this.setState(
             {
                 form: {
@@ -142,7 +170,6 @@ export default class FormGasto extends React.Component<
                 },
                 gastoOriginal: {} as IGasto,
             },
-            callback
         );
     }
 
